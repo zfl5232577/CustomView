@@ -1,0 +1,18 @@
+<?xml version="1.0" encoding="utf-8"?>
+<android.support.constraint.ConstraintLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    xmlns:QQStepView="http://schemas.android.com/apk/res-auto">
+    <com.mark.customview.QQStepView.QQStepView
+        android:id="@+id/step_view"
+        QQStepView:layout_constraintDimensionRatio="1:1"
+        android:layout_width="200dp"
+        android:layout_height="wrap_content"
+        QQStepView:outerColor="#1FA463"
+        QQStepView:innerColor="#DD5044"
+        QQStepView:stepTextColor="#DD5044"
+
+        QQStepView:borderWidth="6dp"
+        QQStepView:stepTextSize="30sp"/>
+
+</android.support.constraint.ConstraintLayout>
