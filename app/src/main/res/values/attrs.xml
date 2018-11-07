@@ -21,6 +21,15 @@
         <attr name="letterTextSize" format="dimension"/>
     </declare-styleable>
 
+    <declare-styleable name="FlowLayout">
+        <attr name="max_select" format="integer"/>
+        <attr name="flowLayoutGravity" format="enum">
+            <enum name="LEFT" value="1"/>
+            <enum name="RIGHT" value="2"/>
+            <enum name="CENTER" value="3"/>
+        </attr>
+    </declare-styleable>
+
 
 
 </resources>

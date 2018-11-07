@@ -41,7 +41,11 @@ public class MainActivity extends AppCompatActivity {
             new DemoInfo("MultiShapeProgressView",
                     "仿写58同城加载进度图形", "MultiShapeProgressActivity"),
             new DemoInfo("LetterIndexBar",
-                    "字母选择条", "LetterIndexBarActivity"),
+                    "字母索引条", "LetterIndexBarActivity"),
+            new DemoInfo("FlowLayout",
+                    "仿写热门标签流式布局", "FlowLayoutActivity"),
+            new DemoInfo("TagFlowLayout",
+                    "仿写热门标签流式布局,使用Adapter设计模式", "TagFlowLayoutActivity"),
     };
 
     private class DemoListAdapter extends BaseAdapter {

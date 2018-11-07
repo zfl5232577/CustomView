@@ -19,6 +19,8 @@
         <activity android:name=".QQStepViewActivity" />
         <activity android:name=".MultiShapeProgressActivity"></activity>
         <activity android:name=".LetterIndexBarActivity" />
+        <activity android:name=".FlowLayoutActivity" />
+        <activity android:name=".TagFlowLayoutActivity" />
     </application>
 
 </manifest>

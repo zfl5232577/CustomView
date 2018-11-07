@@ -29,7 +29,7 @@ import java.util.List;
  *     author : Mark
  *     e-mail : makun.cai@aorise.org
  *     time   : 2018/11/05
- *     desc   : 字母指示栏，支持绑定ListView和RecycleView(绑定时传入LayoutManager)
+ *     desc   : 字母索引条，支持绑定ListView和RecycleView(绑定时传入LayoutManager)
  *     version: 1.0
  * </pre>
  */
