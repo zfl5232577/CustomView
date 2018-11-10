@@ -2,11 +2,9 @@ package com.mark.customview.FlowLayout;
 
 import android.content.Context;
 import android.content.res.TypedArray;
-import android.graphics.Color;
 import android.support.v4.text.TextUtilsCompat;
 import android.util.AttributeSet;
 import android.util.LayoutDirection;
-import android.view.Gravity;
 import android.view.View;
 import android.view.ViewGroup;
 

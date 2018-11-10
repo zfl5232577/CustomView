@@ -1,0 +1,24 @@
+<?xml version="1.0" encoding="utf-8"?>
+<android.support.constraint.ConstraintLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    xmlns:QQStepView="http://schemas.android.com/apk/res-auto">
+    <com.mark.customview.DragView.DragListView
+        android:id="@+id/step_view"
+        QQStepView:layout_constraintDimensionRatio="1:1"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent" >
+
+        <TextView
+            android:layout_width="match_parent"
+            android:layout_height="300dp"
+            android:background="@color/colorAccent"/>
+        <android.support.v7.widget.RecyclerView
+            android:id="@+id/recyclerView"
+            android:background="@android:color/white"
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"/>
+
+    </com.mark.customview.DragView.DragListView>
+
+</android.support.constraint.ConstraintLayout>

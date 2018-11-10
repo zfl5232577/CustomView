@@ -244,6 +244,7 @@ public class LetterIndexBar extends View {
                 }
                 break;
             case MotionEvent.ACTION_UP:
+            case MotionEvent.ACTION_CANCEL:
             default:
 //                setBackgroundResource(android.R.color.transparent);//手指抬起时背景恢复透明
 //                //回调监听器

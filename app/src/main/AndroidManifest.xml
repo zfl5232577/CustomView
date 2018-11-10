@@ -21,6 +21,10 @@
         <activity android:name=".LetterIndexBarActivity" />
         <activity android:name=".FlowLayoutActivity" />
         <activity android:name=".TagFlowLayoutActivity" />
+        <activity android:name=".SlidingMenuActivity" />
+        <activity android:name=".QQSlidingMenuActivity" />
+        <activity android:name=".DragListViewActivity" />
+        <activity android:name=".TestDragViewActivity" />
     </application>
 
 </manifest>

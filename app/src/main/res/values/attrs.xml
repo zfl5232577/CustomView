@@ -31,5 +31,10 @@
     </declare-styleable>
 
 
+    <declare-styleable name="SlidingMenuLayout">
+        <attr name="menuMargin" format="dimension"/>
+    </declare-styleable>
+
+
 
 </resources>
