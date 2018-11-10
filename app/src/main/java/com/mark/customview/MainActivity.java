@@ -55,8 +55,8 @@ public class MainActivity extends AppCompatActivity {
 
             new DemoInfo("TestDragView",
                     "拖拽控件", "TestDragViewActivity"),
-            new DemoInfo("Test",
-                    "拖拽控件", "DragListViewActivity"),
+            new DemoInfo("SquaredLatticeLockView",
+                    "九宫格解锁控件，同时支持更多格子", "SquaredLatticeLockActivity"),
             new DemoInfo("Test",
                     "拖拽控件", "DragListViewActivity"),
             new DemoInfo("Test",

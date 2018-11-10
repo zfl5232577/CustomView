@@ -35,6 +35,10 @@
         <attr name="menuMargin" format="dimension"/>
     </declare-styleable>
 
-
+    <declare-styleable name="SquaredLatticeLockView">
+        <attr name="normalColor" format="color"/>
+        <attr name="selectColor" format="color"/>
+        <attr name="errorColor" format="color"/>
+    </declare-styleable>
 
 </resources>

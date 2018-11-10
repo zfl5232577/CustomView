@@ -2,6 +2,7 @@ package com.mark.customview.DragView;
 
 import android.content.Context;
 import android.support.annotation.IntDef;
+import android.support.v4.view.ViewCompat;
 import android.support.v4.widget.ListViewCompat;
 import android.support.v4.widget.ViewDragHelper;
 import android.util.AttributeSet;
@@ -27,6 +28,7 @@ import java.lang.annotation.RetentionPolicy;
 public class DragListView extends FrameLayout {
     private static final String TAG = DragListView.class.getSimpleName();
     private ViewDragHelper mViewDragHelper;
+    private ViewDragHelper mMenuViewDragHelper;
     private View mMenuView;
     private View mDragContentView;
     private int mMenuHeight;
@@ -58,6 +60,47 @@ public class DragListView extends FrameLayout {
     private float mScrollY;
 
     private void init() {
+        mMenuViewDragHelper = ViewDragHelper.create(this, new ViewDragHelper.Callback() {
+            @Override
+            public boolean tryCaptureView(View child, int pointerId) {
+                return child == mMenuView;
+            }
+
+            @Override
+            public int clampViewPositionVertical(View child, int top, int dy) {
+                if (top >= 0) {
+                    return 0;
+                }
+                return top > -mMenuHeight ? top : -mMenuHeight;
+            }
+
+            @Override
+            public void onViewPositionChanged(View changedView, int left, int top, int dx, int dy) {
+                super.onViewPositionChanged(changedView, left, top, dx, dy);
+                mMenuView.setTranslationY(-top);
+                mDragContentView.offsetTopAndBottom(dy);
+            }
+
+            @Override
+            public void onViewReleased(View releasedChild, float xvel, float yvel) {
+                if (yvel > 3000) {
+                    mMenuViewDragHelper.smoothSlideViewTo(mMenuView, 0, 0);
+                    setState(STATE_OPEN);
+                } else if (yvel < -3000) {
+                    mMenuViewDragHelper.smoothSlideViewTo(mMenuView, 0, -mMenuHeight);
+                    setState(STATE_CLOSE);
+                } else {
+                    if (mDragContentView.getTop() > mMenuHeight / 2) {
+                        mMenuViewDragHelper.smoothSlideViewTo(mMenuView, 0, 0);
+                        setState(STATE_OPEN);
+                    } else {
+                        mMenuViewDragHelper.smoothSlideViewTo(mMenuView, 0, -mMenuHeight);
+                        setState(STATE_CLOSE);
+                    }
+                }
+                invalidate();
+            }
+        });
         mViewDragHelper = ViewDragHelper.create(this, new ViewDragHelper.Callback() {
             @Override
             public boolean tryCaptureView(View child, int pointerId) {
@@ -66,7 +109,6 @@ public class DragListView extends FrameLayout {
 
             @Override
             public int clampViewPositionVertical(View child, int top, int dy) {
-                Log.e(TAG, "clampViewPositionVertical: "+top );
                 if (child.getTop() == 0) {//手指假如显示滑动列表再拖动，那么dy就会假如滑动列表的距离
                     top = (int) (top - mScrollY);
                 }
@@ -74,6 +116,15 @@ public class DragListView extends FrameLayout {
                     return 0;
                 }
                 return top < mMenuHeight ? top : mMenuHeight;
+            }
+
+            @Override
+            public void onViewPositionChanged(View changedView, int left, int top, int dx, int dy) {
+                super.onViewPositionChanged(changedView, left, top, dx, dy);
+                if (mMenuView.getTop() < 0 ) {
+                    mMenuView.setTranslationY(mMenuHeight-top);
+                    mMenuView.offsetTopAndBottom(dy);
+                }
             }
 
             @Override
@@ -130,6 +181,7 @@ public class DragListView extends FrameLayout {
                 Log.e(TAG, "onInterceptTouchEvent: ACTION_DOWN");
                 needReset = true;
                 mDownY = ev.getY();
+                mMenuViewDragHelper.processTouchEvent(ev);
                 mViewDragHelper.processTouchEvent(ev);//防止拦截后mViewDragHelper收不到一套完整的事件，导致无法拖动
                 break;
             case MotionEvent.ACTION_MOVE:
@@ -171,8 +223,9 @@ public class DragListView extends FrameLayout {
                 break;
         }
         try {
+            mMenuViewDragHelper.processTouchEvent(event);
             mViewDragHelper.processTouchEvent(event);
-        } catch (IllegalArgumentException e){
+        } catch (IllegalArgumentException e) {
             e.printStackTrace();
         }
         return true;
@@ -193,6 +246,10 @@ public class DragListView extends FrameLayout {
 
     @Override
     public void computeScroll() {
+        super.computeScroll();
+        if (mMenuViewDragHelper.continueSettling(true)) {
+            invalidate();
+        }
         if (mViewDragHelper.continueSettling(true)) {
             invalidate();
         }

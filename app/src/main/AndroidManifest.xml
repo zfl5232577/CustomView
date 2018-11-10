@@ -25,6 +25,7 @@
         <activity android:name=".QQSlidingMenuActivity" />
         <activity android:name=".DragListViewActivity" />
         <activity android:name=".TestDragViewActivity" />
+        <activity android:name=".SquaredLatticeLockActivity" />
     </application>
 
 </manifest>
