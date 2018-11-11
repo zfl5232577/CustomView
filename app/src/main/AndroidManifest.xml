@@ -17,7 +17,7 @@
             </intent-filter>
         </activity>
         <activity android:name=".QQStepViewActivity" />
-        <activity android:name=".MultiShapeProgressActivity"></activity>
+        <activity android:name=".MultiShapeProgressActivity" />
         <activity android:name=".LetterIndexBarActivity" />
         <activity android:name=".FlowLayoutActivity" />
         <activity android:name=".TagFlowLayoutActivity" />
@@ -26,6 +26,17 @@
         <activity android:name=".DragListViewActivity" />
         <activity android:name=".TestDragViewActivity" />
         <activity android:name=".SquaredLatticeLockActivity" />
+        <activity
+            android:name=".MaterialDesign.TestMDNavigationViewActivity"
+            android:label="@string/title_activity_test_md"
+            android:theme="@style/AppTheme.NoActionBar" />
+        <activity
+            android:name=".MaterialDesign.TestCollapsingToolbarLayoutActivity"
+            android:label="@string/title_activity_test_collapsing_toolbar_layout"
+            android:theme="@style/AppTheme.NoActionBar" />
+        <activity
+            android:name=".MaterialDesign.CustomBehaviorActivity"
+            android:label="@string/title_activity_custom_behavior"></activity>
     </application>
 
 </manifest>
