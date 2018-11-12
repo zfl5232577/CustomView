@@ -15,6 +15,7 @@ import android.widget.Scroller;
 
 import com.mark.customview.R;
 
+
 /**
  * <pre>
  *     author : Mark
@@ -37,13 +38,9 @@ public class ItemSwipeMenuLayout extends FrameLayout {
     private View mContentView;
     private View mLeftMenuView;
     private View mRightMenuView;
-    private PointF mLastP;
     private boolean isSwipeing;
     private PointF mFirstP;
-    private static ItemSwipeMenuLayout mViewCache;
-    private float finalyDistanceX;
-    private State mStateCache;
-    private State result;
+    private State mState = State.CLOSE;
     private MarginLayoutParams mRightMenuViewLp;
     private MarginLayoutParams mLeftMenuViewLp;
     private MarginLayoutParams mContentViewLp;
@@ -67,6 +64,16 @@ public class ItemSwipeMenuLayout extends FrameLayout {
         array.recycle();
         mScaledTouchSlop = ViewConfiguration.get(context).getScaledTouchSlop();
         mScroller = new Scroller(context);
+        this.setFocusable(true);
+        setFocusableInTouchMode(true);
+        setOnFocusChangeListener(new OnFocusChangeListener() {
+            @Override
+            public void onFocusChange(View view, boolean b) {
+                if (!b && mState!=State.CLOSE){
+                    handlerSwipeMenu(State.CLOSE);
+                }
+            }
+        });
     }
 
     @Override
@@ -74,7 +81,7 @@ public class ItemSwipeMenuLayout extends FrameLayout {
         super.onFinishInflate();
         mContentView = findViewById(mContentViewId);
         if (mContentView == null) {
-            throw new RuntimeException("app:contentView must add");
+            throw new RuntimeException("mContentView is null, app:contentView must add");
         }
         mLeftMenuView = findViewById(mLeftMenuViewId);
         mRightMenuView = findViewById(mRightMenuViewId);
@@ -82,8 +89,8 @@ public class ItemSwipeMenuLayout extends FrameLayout {
 
     @Override
     protected void onLayout(boolean changed, int left, int top, int right, int bottom) {
-        int paddingLeft = 0 + getPaddingLeft();
-        int paddingTop = 0 + getPaddingTop();
+        int paddingLeft = getPaddingLeft();
+        int paddingTop = getPaddingTop();
 
         mContentViewLp = (MarginLayoutParams) mContentView.getLayoutParams();
         int cl = paddingLeft + mContentViewLp.leftMargin;
@@ -115,25 +122,27 @@ public class ItemSwipeMenuLayout extends FrameLayout {
     public boolean onInterceptTouchEvent(MotionEvent event) {
         switch (event.getAction()) {
             case MotionEvent.ACTION_DOWN: {
+                requestFocus();
+                if (mFirstP == null) {
+                    mFirstP = new PointF();
+                }
+                mFirstP.set(event.getRawX() + getScrollX(), event.getRawY());
+                Log.e(TAG, "onInterceptTouchEvent: ACTION_DOWN");
                 break;
             }
             case MotionEvent.ACTION_MOVE: {
+                Log.e(TAG, "onInterceptTouchEvent: ACTION_MOVE");
                 //滑动时拦截点击时间
-                if (Math.abs(finalyDistanceX) > mScaledTouchSlop) {
+                if (Math.abs(mFirstP.x - event.getRawX()) > mScaledTouchSlop) {
+                    Log.e(TAG, "onInterceptTouchEvent: 拦截");
                     return true;
                 }
                 break;
             }
             case MotionEvent.ACTION_UP:
             case MotionEvent.ACTION_CANCEL: {
-                //滑动后不触发contentView的点击事件
-                if (isSwipeing) {
-                    isSwipeing = false;
-                    finalyDistanceX = 0;
-                    return true;
-                }
+                Log.e(TAG, "onInterceptTouchEvent: ACTION_UP");
             }
-
         }
         return super.onInterceptTouchEvent(event);
     }
@@ -142,80 +151,56 @@ public class ItemSwipeMenuLayout extends FrameLayout {
     public boolean onTouchEvent(MotionEvent ev) {
         switch (ev.getAction()) {
             case MotionEvent.ACTION_DOWN: {
+                Log.e(TAG, "onTouchEvent: ACTION_DOWN");
                 isSwipeing = false;
-                if (mLastP == null) {
-                    mLastP = new PointF();
-                }
-                mLastP.set(ev.getRawX(), ev.getRawY());
-                if (mFirstP == null) {
-                    mFirstP = new PointF();
-                }
-                mFirstP.set(ev.getRawX(), ev.getRawY());
-                if (mViewCache != null) {
-                    if (mViewCache != this) {
-                        mViewCache.handlerSwipeMenu(State.CLOSE);
-                    }
-                    getParent().requestDisallowInterceptTouchEvent(true);
-                }
                 break;
             }
             case MotionEvent.ACTION_MOVE: {
-                float distanceX = mLastP.x - ev.getRawX();
-                float distanceY = mLastP.y - ev.getRawY();
-                if (Math.abs(distanceY) > mScaledTouchSlop && Math.abs(distanceY) > Math.abs(distanceX)) {
-                    break;
-                }
-                Log.e(TAG, ">>>>>distanceX:" + distanceX);
-
-                scrollBy((int) (distanceX), 0);//滑动使用scrollBy
+                isSwipeing = true;
+                Log.e(TAG, "onTouchEvent: ACTION_MOVE"+hasFocus());
+                float distanceX = mFirstP.x - ev.getRawX();
+                Log.e(TAG, "onTouchEvent: " + distanceX);
+                scrollTo((int) (distanceX), 0);//滑动使用scrollBy
                 //越界修正
                 if (getScrollX() < 0) {
                     if (!mEnableRightSwipe || mLeftMenuView == null) {
                         scrollTo(0, 0);
                     } else {//左滑
                         if (getScrollX() < mLeftMenuView.getLeft() - mLeftMenuViewLp.leftMargin) {
-
                             scrollTo(mLeftMenuView.getLeft() - mLeftMenuViewLp.leftMargin, 0);
                         }
-
                     }
                 } else if (getScrollX() > 0) {
                     if (!mEnableLeftSwipe || mRightMenuView == null) {
                         scrollTo(0, 0);
                     } else {
-                        if (getScrollX() > mRightMenuView.getMeasuredWidth()+mRightMenuViewLp.leftMargin+mRightMenuViewLp.rightMargin) {
-                            scrollTo( mRightMenuView.getMeasuredWidth()+mRightMenuViewLp.leftMargin+mRightMenuViewLp.rightMargin, 0);
+                        if (getScrollX() > mRightMenuView.getMeasuredWidth() + mRightMenuViewLp.leftMargin + mRightMenuViewLp.rightMargin) {
+                            scrollTo(mRightMenuView.getMeasuredWidth() + mRightMenuViewLp.leftMargin + mRightMenuViewLp.rightMargin, 0);
                         }
                     }
                 }
                 //当处于水平滑动时，禁止父类拦截
-                if (Math.abs(distanceX) > mScaledTouchSlop
-//                        || Math.abs(getScrollX()) > mScaledTouchSlop
-                        ) {
+                if (Math.abs(distanceX) > mScaledTouchSlop) {
                     //  Log.i(TAG, ">>>>当处于水平滑动时，禁止父类拦截 true");
                     getParent().requestDisallowInterceptTouchEvent(true);
                 }
-                mLastP.set(ev.getRawX(), ev.getRawY());
                 break;
             }
             case MotionEvent.ACTION_UP:
             case MotionEvent.ACTION_CANCEL: {
-                finalyDistanceX = mFirstP.x - ev.getRawX();
-                if (Math.abs(finalyDistanceX) > mScaledTouchSlop) {
-                    //  System.out.println(">>>>P");
-
-                    isSwipeing = true;
+                Log.e(TAG, "onTouchEvent: ACTION_UP");
+                handlerSwipeMenu(isShouldOpen(getScrollX()));
+                if (!isSwipeing && mState != State.CLOSE) {
+                    handlerSwipeMenu(State.CLOSE);
+                    return true;
                 }
-                result = isShouldOpen(getScrollX());
-                handlerSwipeMenu(result);
                 break;
             }
             default: {
                 break;
             }
         }
-
-        return true;
+        return isSwipeing ? isSwipeing : super.onTouchEvent(ev);
 
     }
 
@@ -238,17 +223,12 @@ public class ItemSwipeMenuLayout extends FrameLayout {
     private void handlerSwipeMenu(State result) {
         if (result == State.LEFTOPEN) {
             mScroller.startScroll(getScrollX(), 0, mLeftMenuView.getLeft() - getScrollX(), 0);
-            mViewCache = this;
-            mStateCache = result;
         } else if (result == State.RIGHTOPEN) {
-            mViewCache = this;
-            mScroller.startScroll(getScrollX(), 0, mRightMenuView.getRight() - mRightMenuView.getLeft()-getScrollX(), 0);
-            mStateCache = result;
+            mScroller.startScroll(getScrollX(), 0, mRightMenuView.getRight() - mRightMenuView.getLeft() - getScrollX(), 0);
         } else {
             mScroller.startScroll(getScrollX(), 0, -getScrollX(), 0);
-            mViewCache = null;
-            mStateCache = null;
         }
+        mState = result;
         invalidate();
     }
 
@@ -261,15 +241,15 @@ public class ItemSwipeMenuLayout extends FrameLayout {
      * @return
      */
     private State isShouldOpen(int scrollX) {
-        if (!(mScaledTouchSlop < Math.abs(finalyDistanceX))) {
-            return mStateCache;
+        if (!(mScaledTouchSlop < Math.abs(scrollX))) {
+            return mState;
         }
-        if (finalyDistanceX < 0) {
+        if (scrollX < 0) {
             //➡滑动
             //1、展开左边按钮
             //获得leftView的测量长度
             if (getScrollX() < 0 && mLeftMenuView != null) {
-                if (Math.abs(mLeftMenuView.getWidth() * 0.5) < Math.abs(getScrollX())) {
+                if (Math.abs(mLeftMenuView.getWidth() * 0.3) < Math.abs(getScrollX())) {
                     return State.LEFTOPEN;
                 }
             }
@@ -278,12 +258,12 @@ public class ItemSwipeMenuLayout extends FrameLayout {
             if (getScrollX() > 0 && mRightMenuView != null) {
                 return State.CLOSE;
             }
-        } else if (finalyDistanceX > 0) {
+        } else if (scrollX > 0) {
             //⬅️滑动
             //3、开启右边菜单按钮
             if (getScrollX() > 0 && mRightMenuView != null) {
 
-                if (Math.abs(mRightMenuView.getWidth() * 0.5) < Math.abs(getScrollX())) {
+                if (Math.abs(mRightMenuView.getWidth() * 0.3) < Math.abs(getScrollX())) {
                     return State.RIGHTOPEN;
                 }
 

@@ -9,6 +9,7 @@ import android.util.Log;
 import android.view.GestureDetector;
 import android.view.MotionEvent;
 import android.view.View;
+import android.view.ViewConfiguration;
 import android.view.ViewGroup;
 import android.view.WindowManager;
 import android.widget.HorizontalScrollView;
@@ -30,6 +31,7 @@ import java.lang.annotation.RetentionPolicy;
 public class SlidingMenuLayout extends HorizontalScrollView {
 
     private static final String TAG = SlidingMenuLayout.class.getSimpleName();
+    private final int mScaledTouchSlop;
     private int mMenuMargin;
     private int mMenuWidth;
     private boolean isIntercept;
@@ -64,6 +66,7 @@ public class SlidingMenuLayout extends HorizontalScrollView {
         mMenuMargin = (int) array.getDimension(R.styleable.SlidingMenuLayout_menuMargin, dp2px(context, 80));
         mMenuWidth = getScreenWidth(context) - mMenuMargin;
         array.recycle();
+        mScaledTouchSlop = ViewConfiguration.get(context).getScaledTouchSlop();
         mGestureDetector = new GestureDetector(context, new GestureDetector.SimpleOnGestureListener() {
             @Override
             public boolean onFling(MotionEvent e1, MotionEvent e2, float velocityX, float velocityY) {
@@ -156,7 +159,7 @@ public class SlidingMenuLayout extends HorizontalScrollView {
             case MotionEvent.ACTION_MOVE:
                 if (isFirstTouch) {
                     isFirstTouch = false;
-                    if (!isIntercept && Math.abs(ev.getRawY() - y) > Math.abs(ev.getRawX() - x)) {
+                    if (!isIntercept && Math.abs(ev.getRawY() - y) > mScaledTouchSlop) {
                         enableScorll = false;
                     }
                 }

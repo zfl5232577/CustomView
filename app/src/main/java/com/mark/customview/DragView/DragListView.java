@@ -9,6 +9,7 @@ import android.util.AttributeSet;
 import android.util.Log;
 import android.view.MotionEvent;
 import android.view.View;
+import android.view.ViewConfiguration;
 import android.widget.FrameLayout;
 import android.widget.ListView;
 
@@ -37,6 +38,7 @@ public class DragListView extends FrameLayout {
     private static final int STATE_CLOSE = 0;
     private int state = STATE_CLOSE;
     private boolean needReset = true;
+    private int mScaledTouchSlop;
 
     @IntDef({STATE_OPEN, STATE_CLOSE})
     @Retention(RetentionPolicy.SOURCE)
@@ -54,12 +56,13 @@ public class DragListView extends FrameLayout {
 
     public DragListView(Context context, AttributeSet attrs, int defStyleAttr) {
         super(context, attrs, defStyleAttr);
-        init();
+        init(context);
     }
 
     private float mScrollY;
 
-    private void init() {
+    private void init(Context context) {
+        mScaledTouchSlop = ViewConfiguration.get(context).getScaledTouchSlop();
         mMenuViewDragHelper = ViewDragHelper.create(this, new ViewDragHelper.Callback() {
             @Override
             public boolean tryCaptureView(View child, int pointerId) {
@@ -186,6 +189,9 @@ public class DragListView extends FrameLayout {
                 break;
             case MotionEvent.ACTION_MOVE:
                 Log.e(TAG, "onInterceptTouchEvent: ACTION_MOVE");
+                if (Math.abs(ev.getY()-mDownY)<mScaledTouchSlop){
+                    break;
+                }
                 if (isOpen()) {
                     return true;
                 } else {

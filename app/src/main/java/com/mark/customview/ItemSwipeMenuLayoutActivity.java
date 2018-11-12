@@ -6,6 +6,8 @@ import android.support.v7.app.AppCompatActivity;
 import android.support.v7.widget.LinearLayoutManager;
 import android.support.v7.widget.RecyclerView;
 import android.text.TextUtils;
+import android.view.View;
+import android.widget.Toast;
 
 import com.chad.library.adapter.base.BaseQuickAdapter;
 import com.chad.library.adapter.base.BaseViewHolder;
@@ -31,6 +33,28 @@ public class ItemSwipeMenuLayoutActivity extends AppCompatActivity {
         final LinearLayoutManager layoutManager = new LinearLayoutManager(this);
         recyclerView.setLayoutManager(layoutManager);
         TestAdapter adapter = new TestAdapter(R.layout.item_swipe_layout_item, data);
+        adapter.setOnItemClickListener(new BaseQuickAdapter.OnItemClickListener() {
+            @Override
+            public void onItemClick(BaseQuickAdapter adapter, View view, int position) {
+                Toast.makeText(ItemSwipeMenuLayoutActivity.this, "item被点击" + position, Toast.LENGTH_SHORT).show();
+            }
+        });
+        adapter.setOnItemChildClickListener(new BaseQuickAdapter.OnItemChildClickListener() {
+            @Override
+            public void onItemChildClick(BaseQuickAdapter adapter, View view, int position) {
+                switch (view.getId()) {
+                    case R.id.lift_view:
+                        Toast.makeText(ItemSwipeMenuLayoutActivity.this, "lift", Toast.LENGTH_SHORT).show();
+                        break;
+                    case R.id.right_view:
+                        Toast.makeText(ItemSwipeMenuLayoutActivity.this, "right", Toast.LENGTH_SHORT).show();
+                        break;
+                    case R.id.tv_name:
+                        Toast.makeText(ItemSwipeMenuLayoutActivity.this, "tv_name", Toast.LENGTH_SHORT).show();
+                        break;
+                }
+            }
+        });
         recyclerView.setAdapter(adapter);
     }
 
@@ -42,6 +66,8 @@ public class ItemSwipeMenuLayoutActivity extends AppCompatActivity {
         @Override
         protected void convert(BaseViewHolder helper, String item) {
             helper.setText(R.id.tv_name, item);
+            helper.addOnClickListener(R.id.lift_view)
+                    .addOnClickListener(R.id.right_view);
         }
     }
 }
