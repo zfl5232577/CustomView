@@ -36,7 +36,9 @@
             android:theme="@style/AppTheme.NoActionBar" />
         <activity
             android:name=".MaterialDesign.CustomBehaviorActivity"
-            android:label="@string/title_activity_custom_behavior"></activity>
+            android:label="@string/title_activity_custom_behavior"
+            android:theme="@style/AppTheme.NoActionBar"/>
+        <activity android:name=".ItemSwipeMenuLayoutActivity" />
     </application>
 
 </manifest>
