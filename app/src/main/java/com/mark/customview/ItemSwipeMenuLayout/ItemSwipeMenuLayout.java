@@ -7,9 +7,11 @@ import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
 import android.util.AttributeSet;
 import android.util.Log;
+import android.view.GestureDetector;
 import android.view.MotionEvent;
 import android.view.View;
 import android.view.ViewConfiguration;
+import android.view.animation.LinearInterpolator;
 import android.widget.FrameLayout;
 import android.widget.Scroller;
 
@@ -29,6 +31,7 @@ public class ItemSwipeMenuLayout extends FrameLayout {
 
     private static final String TAG = ItemSwipeMenuLayout.class.getSimpleName();
     private final Scroller mScroller;
+    private final GestureDetector mGestureDetector;
     private final int mScaledTouchSlop;
     private int mContentViewId;
     private final int mLeftMenuViewId;
@@ -63,15 +66,49 @@ public class ItemSwipeMenuLayout extends FrameLayout {
         mEnableRightSwipe = array.getBoolean(R.styleable.ItemSwipeMenuLayout_enableRightSwipe, true);
         array.recycle();
         mScaledTouchSlop = ViewConfiguration.get(context).getScaledTouchSlop();
-        mScroller = new Scroller(context);
+        mScroller = new Scroller(context, new LinearInterpolator(context, null));
         this.setFocusable(true);
         setFocusableInTouchMode(true);
         setOnFocusChangeListener(new OnFocusChangeListener() {
             @Override
             public void onFocusChange(View view, boolean b) {
-                if (!b && mState!=State.CLOSE){
+                Log.e(TAG, this + "onFocusChange: ===================》" + b);
+                if (!b) {
                     handlerSwipeMenu(State.CLOSE);
                 }
+            }
+        });
+        mGestureDetector = new GestureDetector(context, new GestureDetector.SimpleOnGestureListener() {
+            @Override
+            public boolean onFling(MotionEvent e1, MotionEvent e2, float velocityX, float velocityY) {
+
+                if (mState == State.CLOSE) {
+                    if (velocityX < 0) {
+                        handlerSwipeMenu(State.RIGHTOPEN);
+                        return true;
+                    }
+                    if (velocityX > 0) {
+                        handlerSwipeMenu(State.LEFTOPEN);
+                        return true;
+                    }
+                } else {
+                    if (velocityX > 0 && mState == State.RIGHTOPEN) {
+                        if (mLeftMenuView!=null &&  -(mLeftMenuView.getWidth() + mLeftMenuViewLp.leftMargin + mLeftMenuViewLp.rightMargin) * 0.5 > getScrollX()) {
+                            handlerSwipeMenu(State.LEFTOPEN);
+                        } else {
+                            handlerSwipeMenu(State.CLOSE);
+                        }
+                        return true;
+                    } else if (velocityX < 0 && mState == State.LEFTOPEN) {
+                        if (mRightMenuView!=null && (mRightMenuView.getWidth() + mRightMenuViewLp.leftMargin + mRightMenuViewLp.rightMargin) * 0.5 < getScrollX()) {
+                            handlerSwipeMenu(State.RIGHTOPEN);
+                        } else {
+                            handlerSwipeMenu(State.CLOSE);
+                        }
+                        return true;
+                    }
+                }
+                return super.onFling(e1, e2, velocityX, velocityY);
             }
         });
     }
@@ -149,6 +186,9 @@ public class ItemSwipeMenuLayout extends FrameLayout {
 
     @Override
     public boolean onTouchEvent(MotionEvent ev) {
+        if (mGestureDetector.onTouchEvent(ev)) {
+            return true;
+        }
         switch (ev.getAction()) {
             case MotionEvent.ACTION_DOWN: {
                 Log.e(TAG, "onTouchEvent: ACTION_DOWN");
@@ -156,31 +196,35 @@ public class ItemSwipeMenuLayout extends FrameLayout {
                 break;
             }
             case MotionEvent.ACTION_MOVE: {
-                isSwipeing = true;
-                Log.e(TAG, "onTouchEvent: ACTION_MOVE"+hasFocus());
+                if (!isFocused()) {
+                    break;
+                }
+                Log.e(TAG, "onTouchEvent: ACTION_MOVE" + isFocused());
                 float distanceX = mFirstP.x - ev.getRawX();
-                Log.e(TAG, "onTouchEvent: " + distanceX);
-                scrollTo((int) (distanceX), 0);//滑动使用scrollBy
-                //越界修正
-                if (getScrollX() < 0) {
+//                Log.e(TAG, "onTouchEvent: " + distanceX);
+//                scrollTo((int) (distanceX), 0);
+                if (distanceX < 0) {
                     if (!mEnableRightSwipe || mLeftMenuView == null) {
                         scrollTo(0, 0);
                     } else {//左滑
-                        if (getScrollX() < mLeftMenuView.getLeft() - mLeftMenuViewLp.leftMargin) {
-                            scrollTo(mLeftMenuView.getLeft() - mLeftMenuViewLp.leftMargin, 0);
+                        if (distanceX < mLeftMenuView.getLeft() - mLeftMenuViewLp.leftMargin) {//边界
+                            distanceX = mLeftMenuView.getLeft() - mLeftMenuViewLp.leftMargin;
                         }
+                        scrollTo((int) (distanceX), 0);
                     }
-                } else if (getScrollX() > 0) {
+                } else {
                     if (!mEnableLeftSwipe || mRightMenuView == null) {
                         scrollTo(0, 0);
                     } else {
-                        if (getScrollX() > mRightMenuView.getMeasuredWidth() + mRightMenuViewLp.leftMargin + mRightMenuViewLp.rightMargin) {
-                            scrollTo(mRightMenuView.getMeasuredWidth() + mRightMenuViewLp.leftMargin + mRightMenuViewLp.rightMargin, 0);
+                        if (distanceX > mRightMenuView.getMeasuredWidth() + mRightMenuViewLp.leftMargin + mRightMenuViewLp.rightMargin) {
+                            distanceX = mRightMenuView.getMeasuredWidth() + mRightMenuViewLp.leftMargin + mRightMenuViewLp.rightMargin;
                         }
+                        scrollTo((int) (distanceX), 0);
                     }
                 }
                 //当处于水平滑动时，禁止父类拦截
                 if (Math.abs(distanceX) > mScaledTouchSlop) {
+                    isSwipeing = true;
                     //  Log.i(TAG, ">>>>当处于水平滑动时，禁止父类拦截 true");
                     getParent().requestDisallowInterceptTouchEvent(true);
                 }
@@ -222,9 +266,13 @@ public class ItemSwipeMenuLayout extends FrameLayout {
 
     private void handlerSwipeMenu(State result) {
         if (result == State.LEFTOPEN) {
-            mScroller.startScroll(getScrollX(), 0, mLeftMenuView.getLeft() - getScrollX(), 0);
+            if (mLeftMenuView != null) {
+                mScroller.startScroll(getScrollX(), 0, mLeftMenuView.getLeft() - getScrollX(), 0);
+            }
         } else if (result == State.RIGHTOPEN) {
-            mScroller.startScroll(getScrollX(), 0, mRightMenuView.getRight() - mRightMenuView.getLeft() - getScrollX(), 0);
+            if (mRightMenuView != null) {
+                mScroller.startScroll(getScrollX(), 0, mRightMenuView.getRight() - mRightMenuView.getLeft() - getScrollX(), 0);
+            }
         } else {
             mScroller.startScroll(getScrollX(), 0, -getScrollX(), 0);
         }
@@ -249,7 +297,7 @@ public class ItemSwipeMenuLayout extends FrameLayout {
             //1、展开左边按钮
             //获得leftView的测量长度
             if (getScrollX() < 0 && mLeftMenuView != null) {
-                if (Math.abs(mLeftMenuView.getWidth() * 0.3) < Math.abs(getScrollX())) {
+                if (Math.abs((mLeftMenuView.getWidth() + mLeftMenuViewLp.leftMargin + mLeftMenuViewLp.rightMargin) * 0.5) < Math.abs(getScrollX())) {
                     return State.LEFTOPEN;
                 }
             }
@@ -263,7 +311,7 @@ public class ItemSwipeMenuLayout extends FrameLayout {
             //3、开启右边菜单按钮
             if (getScrollX() > 0 && mRightMenuView != null) {
 
-                if (Math.abs(mRightMenuView.getWidth() * 0.3) < Math.abs(getScrollX())) {
+                if (((mRightMenuView.getWidth() + mRightMenuViewLp.leftMargin + mRightMenuViewLp.rightMargin) * 0.5) < Math.abs(getScrollX())) {
                     return State.RIGHTOPEN;
                 }
 
