@@ -1,11 +1,14 @@
 package com.mark.customview;
 
+import android.graphics.Color;
 import android.os.Bundle;
 import android.support.annotation.Nullable;
 import android.support.v7.app.AppCompatActivity;
+import android.support.v7.widget.GridLayoutManager;
 import android.support.v7.widget.LinearLayoutManager;
 import android.support.v7.widget.RecyclerView;
 import android.text.TextUtils;
+import android.view.LayoutInflater;
 import android.view.View;
 import android.widget.Toast;
 
@@ -13,6 +16,7 @@ import com.chad.library.adapter.base.BaseQuickAdapter;
 import com.chad.library.adapter.base.BaseViewHolder;
 import com.github.promeg.pinyinhelper.Pinyin;
 import com.mark.customview.LetterIndexBar.LetterIndexAbstract;
+import com.mark.customview.RecyclerView.RecyclerViewDivider;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -33,6 +37,13 @@ public class ItemSwipeMenuLayoutActivity extends AppCompatActivity {
         final LinearLayoutManager layoutManager = new LinearLayoutManager(this);
         recyclerView.setLayoutManager(layoutManager);
         TestAdapter adapter = new TestAdapter(R.layout.item_swipe_layout_item, data);
+        adapter.addHeaderView(LayoutInflater.from(this).inflate(R.layout.headerview_recyclerview,recyclerView,false));
+        adapter.addHeaderView(LayoutInflater.from(this).inflate(R.layout.headerview_recyclerview,recyclerView,false));
+//        adapter.addFooterView(LayoutInflater.from(this).inflate(R.layout.footerview_recyclerview,recyclerView,false));
+        RecyclerViewDivider recyclerViewDivider = new RecyclerViewDivider(this, RecyclerViewDivider.HORIZONTAL_LIST, 30, Color.BLUE, 70, 70);
+        recyclerViewDivider.isHasHeaderView(true);
+//        recyclerViewDivider.isHasFooterView(true);
+        recyclerView.addItemDecoration(recyclerViewDivider);
         adapter.setOnItemClickListener(new BaseQuickAdapter.OnItemClickListener() {
             @Override
             public void onItemClick(BaseQuickAdapter adapter, View view, int position) {
