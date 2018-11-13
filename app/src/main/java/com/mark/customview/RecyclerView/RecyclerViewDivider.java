@@ -215,7 +215,6 @@ public class RecyclerViewDivider extends RecyclerView.ItemDecoration {
     @Override
     public void onDraw(Canvas c, RecyclerView parent, RecyclerView.State state) {
         super.onDraw(c, parent, state);
-        Log.e("caimakun", "onDraw:===================================== ");
         if (mOrientation == LinearLayoutManager.VERTICAL) {
             if (parent.getLayoutManager() instanceof GridLayoutManager) {
                 drawGridVertical(c, parent);
@@ -274,7 +273,6 @@ public class RecyclerViewDivider extends RecyclerView.ItemDecoration {
             if (pos<mHeaderViewCount
                     || pos == state.getItemCount()-mFooterViewCount
                     || (!mShowBottomLine && pos==state.getItemCount()-mFooterViewCount - 1)){
-                Log.e("caimakun", "drawHorizontal: =============>>>>>>>>>>>>>>>>>>>>>>>>>"+pos+mShowBottomLine+state.getItemCount() );
                 continue;
             }
             RecyclerView.LayoutParams layoutParams =
