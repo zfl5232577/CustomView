@@ -39,6 +39,8 @@
             android:label="@string/title_activity_custom_behavior"
             android:theme="@style/AppTheme.NoActionBar"/>
         <activity android:name=".ItemSwipeMenuLayoutActivity" />
+        <activity android:name=".RecyclerViewDividerActivity" />
+        <activity android:name=".CustomLayoutManagerActivity" />
     </application>
 
 </manifest>
