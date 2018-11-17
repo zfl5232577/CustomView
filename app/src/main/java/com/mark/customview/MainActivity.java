@@ -69,8 +69,8 @@ public class MainActivity extends AppCompatActivity {
                     "RecyclerViewDivider,RecyclerView分割线，自定义分割线", "RecyclerViewDividerActivity"),
             new DemoInfo("CustomLayoutManager",
                     "自定义LayoutManager", "CustomLayoutManagerActivity"),
-            new DemoInfo("Test",
-                    "拖拽控件", "DragListViewActivity"),
+            new DemoInfo("CardLayoutManager",
+                    "自定义LayoutManager,卡片效果", "CardLayoutManagerActivity"),
             new DemoInfo("Test",
                     "拖拽控件", "DragListViewActivity"),
 

@@ -5,8 +5,6 @@ import android.graphics.Rect;
 import android.support.v7.widget.RecyclerView;
 import android.util.DisplayMetrics;
 import android.util.Log;
-import android.util.SparseArray;
-import android.util.SparseBooleanArray;
 import android.view.View;
 import android.view.ViewGroup;
 import android.view.WindowManager;
@@ -23,15 +21,16 @@ import android.view.WindowManager;
 public class CustomLayoutManager extends RecyclerView.LayoutManager {
 
     private static final String TAG = CustomLayoutManager.class.getSimpleName();
-
     private Context mContext;
-    /** 用于保存item的位置信息 */
-    private SparseArray<Rect> allItemRects = new SparseArray<>();
-    /** 用于保存item是否处于可见状态的信息 */
-    private SparseBooleanArray itemStates = new SparseBooleanArray();
+    private static final int LAYOUT_END = 1;
+    private static final int LAYOUT_START = -1;
+    private int mLayoutDirection = LAYOUT_END;
 
-    public int totalHeight = 0;
-    private int verticalScrollOffset;
+    private int mLastPosition = 0;
+    private int mFristPosition = 0;
+    private int mVerticalScrollOffset;
+    private boolean mInfinite = true;
+    private int mExtra = 0;
 
     public CustomLayoutManager(Context context) {
         mContext = context;
@@ -43,105 +42,102 @@ public class CustomLayoutManager extends RecyclerView.LayoutManager {
                 ViewGroup.LayoutParams.WRAP_CONTENT);
     }
 
+
+
     @Override
     public void onLayoutChildren(RecyclerView.Recycler recycler, RecyclerView.State state) {
+        Log.e(TAG, "onLayoutChildren: getItemCount()" + getItemCount() + "-----" + getChildCount());
         if (getItemCount() <= 0 || state.isPreLayout()) {
             return;
         }
-        super.onLayoutChildren(recycler, state);
         detachAndScrapAttachedViews(recycler);
-        /* 这个方法主要用于计算并保存每个ItemView的位置 */
-        calculateChildrenSite(recycler);
-        recycleAndFillView(recycler, state);
+        fillView(recycler, mLayoutDirection);
+//        recycleAndFillView(recycler, state);
     }
 
-    private void calculateChildrenSite(RecyclerView.Recycler recycler) {
-        totalHeight = 0;
-        for (int i = 0; i < getItemCount(); i++) {
-            View view = recycler.getViewForPosition(i);
-            addView(view);
-            // 我们自己指定ItemView的尺寸。
-            measureChildWithMargins(view, getScreenWidth(mContext) / 2, 0);
-            calculateItemDecorationsForChild(view, new Rect());
+    private void fillView(RecyclerView.Recycler recycler, int layoutDirection) {
+        int verticalSpace = getVerticalSpace();
+        while ((mInfinite || isFillAndRecycler(recycler, layoutDirection, verticalSpace)) && haveMoreItem()) {
+            View view;
+            if (layoutDirection == LAYOUT_END) {
+                view = recycler.getViewForPosition(mLastPosition);
+                mLastPosition += layoutDirection;
+            } else {
+                if (mFristPosition == 0) {
+                    return ;
+                }
+                mFristPosition += layoutDirection;
+                view = recycler.getViewForPosition(mFristPosition);
+            }
+            if (view == null) {
+                return;
+            }
+            if (layoutDirection == LAYOUT_END) {
+                addView(view);
+            } else {
+                addView(view, 0);
+            }
+            measureChildWithMargins(view, 0, 0);
+            int left, top, right, bottom;
             int width = getDecoratedMeasuredWidth(view);
             int height = getDecoratedMeasuredHeight(view);
-
-            Rect mTmpRect = allItemRects.get(i);
-            if (mTmpRect == null) {
-                mTmpRect = new Rect();
-            }
-
-            if (i % 2 == 0) { // 当i能被2整除时，是左，否则是右。
-                // 左
-                mTmpRect.set(0, totalHeight, getScreenWidth(mContext) / 2, totalHeight + height);
+            left = getPaddingLeft();
+            right = left + width;
+            if (layoutDirection == LAYOUT_END) {
+                if (getChildCount() == 1) {
+                    top = getPaddingTop();
+                } else {
+                    top = getDecoratedBottom(getChildAt(getChildCount() - 2));
+                }
+                bottom = top + height;
+                if (mInfinite && bottom > getVerticalSpace()) {
+                    mInfinite = false;
+                }
             } else {
-                // 右，需要换行
-                mTmpRect.set(getScreenWidth(mContext) / 2, totalHeight, getScreenWidth(mContext),
-                        totalHeight + height);
-                totalHeight = totalHeight + height;
+                bottom = getDecoratedTop(getChildAt(1));
+                top = bottom - height;
             }
-
-            // 保存ItemView的位置信息
-            allItemRects.put(i, mTmpRect);
-            // 由于之前调用过detachAndScrapAttachedViews(recycler)，所以此时item都是不可见的
-            itemStates.put(i, false);
+            layoutDecoratedWithMargins(view, left, top, right, bottom);
         }
+        Log.e(TAG, "fillView: " + getChildCount());
     }
 
-
-    private void recycleAndFillView(RecyclerView.Recycler recycler, RecyclerView.State state) {
-        if (getItemCount() <= 0 || state.isPreLayout()) {
-            return;
-        }
-
-        // 当前scroll offset状态下的显示区域
-        Rect displayRect= new Rect(0, verticalScrollOffset, getHorizontalSpace(),
-                verticalScrollOffset + getVerticalSpace());
-
-        /**
-         * 将滑出屏幕的Items回收到Recycle缓存中
-         */
-        Rect childRect = new Rect();
-        for (int i = 0; i < getChildCount(); i++) {
-            //这个方法获取的是RecyclerView中的View，注意区别Recycler中的View
-            //这获取的是实际的View
-            View child = getChildAt(i);
-            //下面几个方法能够获取每个View占用的空间的位置信息，包括ItemDecorator
-            childRect.left = getDecoratedLeft(child);
-            childRect.top = getDecoratedTop(child);
-            childRect.right = getDecoratedRight(child);
-            childRect.bottom = getDecoratedBottom(child);
-            //如果Item没有在显示区域，就说明需要回收
-            if (!Rect.intersects(displayRect, childRect)) {
-                //移除并回收掉滑出屏幕的View
-                removeAndRecycleView(child, recycler);
-                itemStates.put(i, false); //更新该View的状态为未依附
+    private boolean isFillAndRecycler(RecyclerView.Recycler recycler, int layoutDirection, int verticalSpace) {
+        boolean isFill = false;
+        View childViewEnd = getChildAt(getChildCount() - 1);
+        View childViewStar = getChildAt(0);
+        if (layoutDirection == LAYOUT_END) {
+            if (childViewEnd != null) {
+                if (getDecoratedBottom(childViewEnd) - verticalSpace < mExtra) {
+                    isFill = true;
+                }
             }
-        }
-
-        //重新显示需要出现在屏幕的子View
-        for (int i = 0; i < getItemCount(); i++) {
-            //判断ItemView的位置和当前显示区域是否重合
-            if (Rect.intersects(displayRect, allItemRects.get(i))) {
-                //获得Recycler中缓存的View
-                View itemView = recycler.getViewForPosition(i);
-                measureChildWithMargins(itemView, getScreenWidth(mContext) / 2, 0);
-                //添加View到RecyclerView上
-                addView(itemView);
-                //取出先前存好的ItemView的位置矩形
-                Rect rect = allItemRects.get(i);
-                //将这个item布局出来
-                layoutDecoratedWithMargins(itemView,
-                        rect.left,
-                        rect.top - verticalScrollOffset,  //因为现在是复用View，所以想要显示在
-                        rect.right,
-                        rect.bottom - verticalScrollOffset);
-                itemStates.put(i, true); //更新该View的状态为依附
+            if (childViewStar != null) {
+                if (-getDecoratedBottom(childViewStar) > mExtra) {
+                    removeAndRecycleView(childViewStar, recycler);
+                    mFristPosition += layoutDirection;
+                }
             }
+        } else {
+            if (childViewStar != null) {
+                if (-getDecoratedTop(childViewStar) < mExtra) {
+                    isFill = true;
+                }
+            }
+            if (childViewEnd != null) {
+                if (getDecoratedTop(childViewEnd) - verticalSpace > mExtra) {
+                    removeAndRecycleView(childViewEnd, recycler);
+                    mLastPosition += layoutDirection;
+                }
+            }
+
         }
-        Log.e(TAG, "recycleAndFillView: "+"itemCount = " + getChildCount() );
+        return isFill;
     }
 
+    private boolean haveMoreItem() {
+        return mFristPosition >= 0 && mLastPosition < getItemCount();
+    }
 
     @Override
     public boolean canScrollVertically() {
@@ -151,24 +147,25 @@ public class CustomLayoutManager extends RecyclerView.LayoutManager {
 
     @Override
     public int scrollVerticallyBy(int dy, RecyclerView.Recycler recycler, RecyclerView.State state) {
-        //每次滑动时先释放掉所有的View，因为后面调用recycleAndFillView()时会重新addView()。
-        detachAndScrapAttachedViews(recycler);
-        // 列表向下滚动dy为正，列表向上滚动dy为负，这点与Android坐标系保持一致。
-        // 实际要滑动的距离
-        int travel = dy;
+        Log.e(TAG, "scrollVerticallyBy: " + dy + "----" + getChildCount());
 
-        Log.e(TAG, "scrollVerticallyBy: "+getChildCount()+ "dy = " + dy);
-        // 如果滑动到最顶部
-        if (verticalScrollOffset + dy < 0) {
-            travel = -verticalScrollOffset;
-        } else if (verticalScrollOffset + dy > totalHeight - getVerticalSpace()) {// 如果滑动到最底部
-            travel = totalHeight - getVerticalSpace() - verticalScrollOffset;
+        if (getChildCount() == 0 || dy == 0) {
+            return 0;
         }
-        // 调用该方法通知view在y方向上移动指定距离
+        mExtra= Math.abs(dy);
+        int travel = dy;
+        // 如果滑动到最顶部
+        if (mVerticalScrollOffset + dy < 0) {
+            travel = -mVerticalScrollOffset;
+        }
+        if (mLastPosition == getItemCount()&&getDecoratedBottom(getChildAt(getChildCount()-1))-dy<getVerticalSpace()){
+                travel =getDecoratedBottom(getChildAt(getChildCount()-1))-getVerticalSpace();
+        }
+        mVerticalScrollOffset += travel;
+
+        mLayoutDirection = dy > 0 ? LAYOUT_END : LAYOUT_START;
+        fillView(recycler, mLayoutDirection);
         offsetChildrenVertical(-travel);
-        recycleAndFillView(recycler, state); //回收并显示View
-        // 将竖直方向的偏移量+travel
-        verticalScrollOffset += travel;
         return travel;
     }
 

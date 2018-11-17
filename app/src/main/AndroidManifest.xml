@@ -2,6 +2,10 @@
 <manifest xmlns:android="http://schemas.android.com/apk/res/android"
     package="com.mark.customview">
 
+    <uses-permission android:name="android.permission.INTERNET"/>
+    <uses-permission android:name="android.permission.READ_EXTERNAL_STORAGE"/>
+    <uses-permission android:name="android.permission.WRITE_EXTERNAL_STORAGE"/>
+
     <application
         android:allowBackup="true"
         android:icon="@mipmap/ic_launcher"
@@ -41,6 +45,7 @@
         <activity android:name=".ItemSwipeMenuLayoutActivity" />
         <activity android:name=".RecyclerViewDividerActivity" />
         <activity android:name=".CustomLayoutManagerActivity" />
+        <activity android:name=".CardLayoutManagerActivity" />
     </application>
 
 </manifest>

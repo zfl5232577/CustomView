@@ -31,7 +31,7 @@ public class RecyclerViewDividerActivity extends AppCompatActivity {
         for (int i = 0, size = s.length(); i < size; i += 4) {
             data.add(s.substring(i, i + 4 >= size ? size - 1 : i + 4));
         }
-        final GridLayoutManager layoutManager = new GridLayoutManager(this,4);
+        final GridLayoutManager layoutManager = new GridLayoutManager(this,1);
         recyclerView.setLayoutManager(layoutManager);
         TestAdapter adapter = new TestAdapter(R.layout.item_layout_letter_data_list, data);
         adapter.addHeaderView(LayoutInflater.from(this).inflate(R.layout.headerview_recyclerview,recyclerView,false));
