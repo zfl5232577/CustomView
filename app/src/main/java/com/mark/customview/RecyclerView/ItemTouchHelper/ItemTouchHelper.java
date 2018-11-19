@@ -1156,10 +1156,13 @@ public class ItemTouchHelper extends RecyclerView.ItemDecoration
                 mVelocityTracker.computeCurrentVelocity(PIXELS_PER_SECOND,
                         mCallback.getSwipeVelocityThreshold(mMaxSwipeVelocity));
                 final float xVelocity = mVelocityTracker.getXVelocity(mActivePointerId);
+                final float yVelocity = mVelocityTracker.getYVelocity(mActivePointerId);
                 final int velDirFlag = xVelocity > 0f ? RIGHT : LEFT;
+                Log.e(TAG, "checkHorizontalSwipe: "+xVelocity+yVelocity );
                 final float absXVelocity = Math.abs(xVelocity);
                 if ((velDirFlag & flags) != 0 && dirFlag == velDirFlag
-                        && absXVelocity >= mCallback.getSwipeEscapeVelocity(mSwipeEscapeVelocity)) {
+                        && absXVelocity >= mCallback.getSwipeEscapeVelocity(mSwipeEscapeVelocity)
+                        && absXVelocity*1.4 > Math.abs(yVelocity)) {
                     return velDirFlag;
                 }
             }

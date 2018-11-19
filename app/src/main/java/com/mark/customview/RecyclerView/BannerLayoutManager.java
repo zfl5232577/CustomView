@@ -4,7 +4,9 @@ import android.content.Context;
 import android.graphics.Canvas;
 import android.support.v4.view.ViewCompat;
 import android.support.v7.widget.CardView;
+import android.support.v7.widget.LinearSnapHelper;
 import android.support.v7.widget.RecyclerView;
+import android.support.v7.widget.SnapHelper;
 import android.util.DisplayMetrics;
 import android.util.Log;
 import android.view.View;
@@ -18,62 +20,22 @@ import com.mark.customview.RecyclerView.ItemTouchHelper.ItemTouchHelper;
  *     author : Mark
  *     e-mail : makun.cai@aorise.org
  *     time   : 2018/11/13
- *     desc   : 左右滑动飞出卡片布局
+ *     desc   : Banner布局，卡片横向滑动布局
  *     version: 1.0
  * </pre>
  */
-public class CardLayoutManager extends RecyclerView.LayoutManager {
+public class BannerLayoutManager extends RecyclerView.LayoutManager {
 
-    private static final String TAG = CardLayoutManager.class.getSimpleName();
-    private ItemTouchHelper mItemTouchHelper;
-    private RecyclerView.Recycler recycler;
-    private int mMaxShowCount = 4;
+    private static final String TAG = BannerLayoutManager.class.getSimpleName();
+    private SnapHelper mSnapHelper;
+    private int mMaxShowCount = 1;//默认显示一张图片。可以显示多张
     private int mCurrentPosition = 0;
+    private int mSurplusWidth = 0;//左右两边剩余的宽度
 
-    public CardLayoutManager(final RecyclerView recyclerView, int maxShowCount) {
-        mItemTouchHelper = new ItemTouchHelper(new ItemTouchHelper.Callback() {
-            @Override
-            public int getMovementFlags(RecyclerView recyclerView, RecyclerView.ViewHolder viewHolder) {
-                if (viewHolder.itemView == getChildAt(getChildCount() - 1)) {
-                    return makeMovementFlags(0, ItemTouchHelper.UP | ItemTouchHelper.DOWN | ItemTouchHelper.START | ItemTouchHelper.END);
-                }
-                return 0;
-            }
-
-            @Override
-            public boolean onMove(RecyclerView recyclerView, RecyclerView.ViewHolder viewHolder, RecyclerView.ViewHolder target) {
-                return false;
-            }
-
-            @Override
-            public void onSwiped(RecyclerView.ViewHolder viewHolder, int direction) {
-                Log.e(TAG, "onSwiped: ================>");
-                viewHolder.itemView.setRotation(0);
-                mCurrentPosition = (mCurrentPosition + 1) % getItemCount();
-                Log.e(TAG, "onSwiped: " + mCurrentPosition + "====" + getChildCount());
-                fillView(recycler);
-            }
-
-            @Override
-            public float getSwipeThreshold(RecyclerView.ViewHolder viewHolder) {
-                return 0.5f;
-            }
-
-            @Override
-            public void onChildDraw(Canvas c, RecyclerView recyclerView, RecyclerView.ViewHolder viewHolder, float dX, float dY, int actionState, boolean isCurrentlyActive) {
-                super.onChildDraw(c, recyclerView, viewHolder, dX, dY, actionState, isCurrentlyActive);
-                int rotation = (int) (dX / getWidth() / 2 * 45);
-                viewHolder.itemView.setRotation(rotation);
-            }
-        });
+    public BannerLayoutManager(final RecyclerView recyclerView, int maxShowCount) {
         mMaxShowCount = maxShowCount;
-        mItemTouchHelper.attachToRecyclerView(recyclerView);
-    }
-
-    public boolean isViewCenterInHorizontal(View view) {
-        int viewCenterX = (int) (view.getX() + view.getWidth() / 2);
-        Log.e(TAG, "isViewCenterInHorizontal: " + viewCenterX);
-        return viewCenterX >= view.getLeft() && viewCenterX <= view.getRight();
+        mSnapHelper = new LinearSnapHelper();
+//        mSnapHelper.attachToRecyclerView(recyclerView);
     }
 
     @Override
@@ -88,29 +50,38 @@ public class CardLayoutManager extends RecyclerView.LayoutManager {
         if (getItemCount() <= 0 || state.isPreLayout() || getChildCount() > 0) {
             return;
         }
-        this.recycler = recycler;
         detachAndScrapAttachedViews(recycler);
         fillView(recycler);
     }
 
+    public void setMaxShowCount(int maxShowCount) {
+        mMaxShowCount = maxShowCount;
+    }
+
+    public void setCurrentPosition(int currentPosition) {
+        mCurrentPosition = currentPosition;
+    }
+
+    public void setSurplusWidth(int surplusWidth) {
+        mSurplusWidth = surplusWidth;
+    }
+
     private void fillView(RecyclerView.Recycler recycler) {
-        Log.e(TAG, "fillView: " + mCurrentPosition);
         int childCount = getChildCount();
         if (childCount == 0) {
-            for (int i = mMaxShowCount - 1; i >= 0; i--) {
-                CardView view = (CardView) recycler.getViewForPosition((mCurrentPosition + i) % getItemCount());
+            for (int i = 0; i <mMaxShowCount+2; i++) {
+                View view = recycler.getViewForPosition((mCurrentPosition + getItemCount()-1+i) % getItemCount());
                 addView(view);
                 measureChildWithMargins(view, 0, 0);
-                int widthSpace = getWidth() - getDecoratedMeasuredWidth(view);
-                int heightSpace = getHeight() - getDecoratedMeasuredHeight(view);
+                int width = getDecoratedMeasuredWidth(view);
+                int height = getDecoratedMeasuredHeight(view);
+                int dividerWidth = (getWidth()-width*mMaxShowCount-2*mSurplusWidth)/(mMaxShowCount+1);
                 //我们在布局时，将childView居中处理，这里也可以改为只水平居中
-                layoutDecoratedWithMargins(view, widthSpace / 2, heightSpace / 3,
-                        widthSpace / 2 + getDecoratedMeasuredWidth(view),
-                        heightSpace / 3 + getDecoratedMeasuredHeight(view));
-                view.setTranslationY(75 * i);
-                view.setScaleX((float) (1 - 0.09 * i));
-                view.setScaleY((float) (1 - 0.09 * i));
-                view.setCardElevation(mMaxShowCount - i);
+                int left =  (mSurplusWidth-width)+i*(width+dividerWidth);
+                int top = getPaddingTop();
+                int right = left+width;
+                int bottom = top+height;
+                layoutDecoratedWithMargins(view, left, top, right, bottom);
             }
         } else if (childCount == mMaxShowCount) {
             Log.e(TAG, "fillView: " + childCount);
@@ -136,6 +107,17 @@ public class CardLayoutManager extends RecyclerView.LayoutManager {
             }
         }
         Log.e(TAG, "fillView: " + getChildCount());
+    }
+
+    @Override
+    public boolean canScrollHorizontally() {
+        return true;
+    }
+
+    @Override
+    public int scrollHorizontallyBy(int dx, RecyclerView.Recycler recycler, RecyclerView.State state) {
+        offsetChildrenHorizontal(-dx);
+        return dx;
     }
 
     /**

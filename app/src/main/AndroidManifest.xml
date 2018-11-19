@@ -46,6 +46,7 @@
         <activity android:name=".RecyclerViewDividerActivity" />
         <activity android:name=".CustomLayoutManagerActivity" />
         <activity android:name=".CardLayoutManagerActivity" />
+        <activity android:name=".BannerLayoutManagerActivity" />
     </application>
 
 </manifest>

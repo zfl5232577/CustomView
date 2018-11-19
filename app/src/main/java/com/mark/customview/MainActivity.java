@@ -71,8 +71,8 @@ public class MainActivity extends AppCompatActivity {
                     "自定义LayoutManager", "CustomLayoutManagerActivity"),
             new DemoInfo("CardLayoutManager",
                     "自定义LayoutManager,卡片效果", "CardLayoutManagerActivity"),
-            new DemoInfo("Test",
-                    "拖拽控件", "DragListViewActivity"),
+            new DemoInfo("BannerLayoutManager",
+                    "自定义LayoutManager,page Banner卡片效果", "BannerLayoutManagerActivity"),
 
     };
 
