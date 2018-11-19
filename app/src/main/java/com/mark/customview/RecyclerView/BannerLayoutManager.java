@@ -1,10 +1,9 @@
 package com.mark.customview.RecyclerView;
 
 import android.content.Context;
-import android.graphics.Canvas;
 import android.support.v4.view.ViewCompat;
 import android.support.v7.widget.CardView;
-import android.support.v7.widget.LinearSnapHelper;
+import android.support.v7.widget.PagerSnapHelper;
 import android.support.v7.widget.RecyclerView;
 import android.support.v7.widget.SnapHelper;
 import android.util.DisplayMetrics;
@@ -12,8 +11,6 @@ import android.util.Log;
 import android.view.View;
 import android.view.ViewGroup;
 import android.view.WindowManager;
-
-import com.mark.customview.RecyclerView.ItemTouchHelper.ItemTouchHelper;
 
 /**
  * <pre>
@@ -27,15 +24,20 @@ import com.mark.customview.RecyclerView.ItemTouchHelper.ItemTouchHelper;
 public class BannerLayoutManager extends RecyclerView.LayoutManager {
 
     private static final String TAG = BannerLayoutManager.class.getSimpleName();
+    private RecyclerView.Recycler mRecycler;
     private SnapHelper mSnapHelper;
     private int mMaxShowCount = 1;//默认显示一张图片。可以显示多张
     private int mCurrentPosition = 0;
     private int mSurplusWidth = 0;//左右两边剩余的宽度
+    private int mItemWidth;
+    private int mItemHeight;
+    private int mDividerWidth;
+    private int mScrollOffset;
 
     public BannerLayoutManager(final RecyclerView recyclerView, int maxShowCount) {
         mMaxShowCount = maxShowCount;
-        mSnapHelper = new LinearSnapHelper();
-//        mSnapHelper.attachToRecyclerView(recyclerView);
+        mSnapHelper = new PagerSnapHelper();
+        mSnapHelper.attachToRecyclerView(recyclerView);
     }
 
     @Override
@@ -50,6 +52,7 @@ public class BannerLayoutManager extends RecyclerView.LayoutManager {
         if (getItemCount() <= 0 || state.isPreLayout() || getChildCount() > 0) {
             return;
         }
+        mRecycler = recycler;
         detachAndScrapAttachedViews(recycler);
         fillView(recycler);
     }
@@ -69,41 +72,45 @@ public class BannerLayoutManager extends RecyclerView.LayoutManager {
     private void fillView(RecyclerView.Recycler recycler) {
         int childCount = getChildCount();
         if (childCount == 0) {
-            for (int i = 0; i <mMaxShowCount+2; i++) {
-                View view = recycler.getViewForPosition((mCurrentPosition + getItemCount()-1+i) % getItemCount());
+            for (int i = 0; i < mMaxShowCount + 2; i++) {
+                View view = recycler.getViewForPosition((mCurrentPosition + getItemCount() - 1 + i) % getItemCount());
                 addView(view);
                 measureChildWithMargins(view, 0, 0);
-                int width = getDecoratedMeasuredWidth(view);
-                int height = getDecoratedMeasuredHeight(view);
-                int dividerWidth = (getWidth()-width*mMaxShowCount-2*mSurplusWidth)/(mMaxShowCount+1);
+                mItemWidth = getDecoratedMeasuredWidth(view);
+                mItemHeight = getDecoratedMeasuredHeight(view);
+                mDividerWidth = (getWidth() - mItemWidth * mMaxShowCount - 2 * mSurplusWidth) / (mMaxShowCount + 1);
                 //我们在布局时，将childView居中处理，这里也可以改为只水平居中
-                int left =  (mSurplusWidth-width)+i*(width+dividerWidth);
-                int top = getPaddingTop();
-                int right = left+width;
-                int bottom = top+height;
+                int left = (mSurplusWidth - mItemWidth) + i * (mItemWidth + mDividerWidth);
+                int top = (getHeight() - mItemHeight) / 2;
+                int right = left + mItemWidth;
+                int bottom = top + mItemHeight;
                 layoutDecoratedWithMargins(view, left, top, right, bottom);
             }
-        } else if (childCount == mMaxShowCount) {
-            Log.e(TAG, "fillView: " + childCount);
-            removeAndRecycleView(getChildAt(getChildCount() - 1), recycler);
-            CardView view = (CardView) recycler.getViewForPosition((mCurrentPosition + mMaxShowCount - 1) % getItemCount());
-            addView(view, 0);
-            measureChildWithMargins(view, 0, 0);
-            int widthSpace = getWidth() - getDecoratedMeasuredWidth(view);
-            int heightSpace = getHeight() - getDecoratedMeasuredHeight(view);
-            //我们在布局时，将childView居中处理，这里也可以改为只水平居中
-            layoutDecoratedWithMargins(view, widthSpace / 2, heightSpace / 3,
-                    widthSpace / 2 + getDecoratedMeasuredWidth(view),
-                    heightSpace / 3 + getDecoratedMeasuredHeight(view));
-            view.setTranslationY(75 * mMaxShowCount);
-            view.setScaleX((float) (1 - 0.09 * mMaxShowCount));
-            view.setScaleY((float) (1 - 0.09 * mMaxShowCount));
-            view.setCardElevation(0);
-            for (int i = mMaxShowCount - 1; i >= 0; i--) {
-                ((CardView) getChildAt(i)).setCardElevation(i + 1);
-                ViewCompat.animate(getChildAt(i)).scaleX((float) (1 - 0.09 * (mMaxShowCount - 1 - i)))
-                        .scaleY((float) (1 - 0.09 * (mMaxShowCount - 1 - i)))
-                        .translationY(75 * (mMaxShowCount - 1 - i)).setDuration(250).start();
+        } else {
+            if (Math.abs(mScrollOffset) > mItemWidth / 2) {
+                Log.e(TAG, "fillView: " + childCount);
+                if (mScrollOffset > 0) {
+                    int addViewPosition = (mCurrentPosition + getItemCount() + mMaxShowCount + 1) % getItemCount();
+                    View lastView = getChildAt(getChildCount() - 1);
+                    if (getPosition(lastView) != addViewPosition) {
+                        View view = recycler.getViewForPosition(addViewPosition);
+                        addView(view);
+                        measureChildWithMargins(view, 0, 0);
+                        layoutDecoratedWithMargins(view, lastView.getRight() + mDividerWidth, lastView.getTop()
+                                , lastView.getRight() + mDividerWidth + mItemWidth, lastView.getTop() + mItemHeight);
+                    }
+                } else {
+                    int addViewPosition = (mCurrentPosition + getItemCount() - 2) % getItemCount();
+                    View firstView = getChildAt(0);
+                    if (getPosition(firstView) != addViewPosition) {
+                        Log.e(TAG, "fillView:---------------------- " + getPosition(firstView) + addViewPosition);
+                        View view = recycler.getViewForPosition(addViewPosition);
+                        addView(view, 0);
+                        measureChildWithMargins(view, 0, 0);
+                        layoutDecoratedWithMargins(view, firstView.getLeft() - mDividerWidth - mItemWidth, firstView.getTop()
+                                , firstView.getLeft() - mDividerWidth, firstView.getTop() + mItemHeight);
+                    }
+                }
             }
         }
         Log.e(TAG, "fillView: " + getChildCount());
@@ -116,8 +123,47 @@ public class BannerLayoutManager extends RecyclerView.LayoutManager {
 
     @Override
     public int scrollHorizontallyBy(int dx, RecyclerView.Recycler recycler, RecyclerView.State state) {
-        offsetChildrenHorizontal(-dx);
-        return dx;
+        Log.e(TAG, "scrollHorizontallyBy: " + dx + "=============" + getChildCount());
+        int travel = dx;
+        if (Math.abs(mScrollOffset + dx) > (mItemWidth + mDividerWidth) * mMaxShowCount) {
+            travel = mScrollOffset > 0 ? (mItemWidth + mDividerWidth) * mMaxShowCount - mScrollOffset : -mScrollOffset - (mItemWidth + mDividerWidth) * mMaxShowCount;
+        }
+        mScrollOffset += travel;
+        fillView(recycler);
+        offsetChildrenHorizontal(-travel);
+        return travel;
+    }
+
+    @Override
+    public void onScrollStateChanged(int state) {
+        super.onScrollStateChanged(state);
+        if (state == RecyclerView.SCROLL_STATE_IDLE) {
+            //滚动停止时回收多余的View
+            Log.e(TAG, "onScrollStateChanged: ==============================>>>>>>>" + mScrollOffset);
+            if (mScrollOffset != 0 && Math.abs(mScrollOffset) % (mItemWidth + mDividerWidth) == 0) {
+                mCurrentPosition = ((mCurrentPosition + mScrollOffset / (mItemWidth + mDividerWidth))+getItemCount()) % getItemCount();
+                Log.e(TAG, "onScrollStateChanged: " + mScrollOffset / (mItemWidth + mDividerWidth)+"===="+mCurrentPosition);
+                mScrollOffset = 0;
+                int childCount = getChildCount();
+                if (childCount > mMaxShowCount + 2) {
+                    View currentView = findViewByPosition(mCurrentPosition);
+                    int currentViewIndex = -1;
+                    for (int i = 0; i < childCount; i++) {
+                        if (getChildAt(i) == currentView) {
+                            currentViewIndex = i;
+                            break;
+                        }
+                    }
+                    for (int i = 0; currentViewIndex > 0 && i < childCount; i++) {
+                        if (i - currentViewIndex < -1 || i - currentViewIndex > mMaxShowCount) {
+                            removeAndRecycleViewAt(i, mRecycler);
+                        }
+                    }
+                }
+            }
+
+
+        }
     }
 
     /**

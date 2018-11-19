@@ -22,7 +22,7 @@ public class BannerLayoutManagerActivity extends AppCompatActivity {
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-        setContentView(R.layout.activity_itemswipemenu);
+        setContentView(R.layout.activity_itemsbannermenu);
         RecyclerView recyclerView = findViewById(R.id.recyclerView);
         final List<String> data = new ArrayList<>();
         data.add("https://ss0.bdstatic.com/70cFuHSh_Q1YnxGkpoWK1HF6hhy/it/u=3249675290,838025564&fm=26&gp=0.jpg");
