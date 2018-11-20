@@ -115,8 +115,10 @@ public class CardLayoutManager extends RecyclerView.LayoutManager {
         } else if (childCount == mMaxShowCount) {
             Log.e(TAG, "fillView: " + childCount);
             removeAndRecycleView(getChildAt(getChildCount() - 1), recycler);
+            Log.e(TAG, "fillView: "+getChildAt(getChildCount() - 1) );
             CardView view = (CardView) recycler.getViewForPosition((mCurrentPosition + mMaxShowCount - 1) % getItemCount());
             addView(view, 0);
+            Log.e(TAG, "fillView: "+view );
             measureChildWithMargins(view, 0, 0);
             int widthSpace = getWidth() - getDecoratedMeasuredWidth(view);
             int heightSpace = getHeight() - getDecoratedMeasuredHeight(view);

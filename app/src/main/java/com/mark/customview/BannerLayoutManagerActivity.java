@@ -48,11 +48,17 @@ public class BannerLayoutManagerActivity extends AppCompatActivity {
     public static class CardAdapter extends BaseQuickAdapter<String, BaseViewHolder> {
         public CardAdapter(int layoutResId, @Nullable List<String> data) {
             super(layoutResId, data);
+//            setHasStableIds(true);
         }
 
         @Override
         protected void convert(BaseViewHolder helper, String item) {
             Glide.with(mContext).load(item).into((ImageView) helper.getView(R.id.iv_image));
         }
+
+//        @Override
+//        public long getItemId(int position) {
+//            return getItemViewType(position);
+//        }
     }
 }
