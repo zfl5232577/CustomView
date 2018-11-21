@@ -73,6 +73,8 @@ public class MainActivity extends AppCompatActivity {
                     "自定义LayoutManager,卡片效果", "CardLayoutManagerActivity"),
             new DemoInfo("BannerLayoutManager",
                     "自定义LayoutManager,page Banner卡片效果", "BannerLayoutManagerActivity"),
+            new DemoInfo("SourceLinearLayoutManager",
+                    "LinearLayoutManager,源码阅读，学习为什么源码完全不卡顿", "SourceLinearLayoutManagerActivity"),
 
     };
 

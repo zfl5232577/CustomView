@@ -47,6 +47,7 @@
         <activity android:name=".CustomLayoutManagerActivity" />
         <activity android:name=".CardLayoutManagerActivity" />
         <activity android:name=".BannerLayoutManagerActivity" />
+        <activity android:name=".SourceLinearLayoutManagerActivity" />
     </application>
 
 </manifest>

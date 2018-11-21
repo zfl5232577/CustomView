@@ -1,6 +1,5 @@
 package com.mark.customview.RecyclerView;
 
-import android.arch.lifecycle.BuildConfig;
 import android.content.Context;
 import android.graphics.PointF;
 import android.graphics.Rect;
@@ -13,6 +12,8 @@ import android.util.Log;
 import android.util.SparseArray;
 import android.view.View;
 import android.view.ViewGroup;
+
+import com.mark.customview.BuildConfig;
 
 import static android.support.v7.widget.RecyclerView.SCROLL_STATE_IDLE;
 
@@ -35,9 +36,9 @@ public class GalleryLayoutManager extends RecyclerView.LayoutManager implements 
     private int mLastVisiblePos = 0;
     private int mInitialSelectedPosition = 0;
 
-    int mCurSelectedPosition = -1;
+    private int mCurSelectedPosition = -1;
 
-    View mCurSelectedView;
+    private View mCurSelectedView;
     /**
      * Scroll state
      */
@@ -48,6 +49,14 @@ public class GalleryLayoutManager extends RecyclerView.LayoutManager implements 
     private InnerScrollListener mInnerScrollListener = new InnerScrollListener();
 
     private boolean mCallbackInFling = false;
+    private Runnable mAutoRoll = new Runnable() {
+        @Override
+        public void run() {
+            smoothScrollToPosition(mRecyclerView, null, mCurSelectedPosition + 1);
+            mRecyclerView.postDelayed(this, mRollTime);
+        }
+    };
+    private int mRollTime = 3000;
 
     /**
      * Current orientation. Either {@link #HORIZONTAL} or {@link #VERTICAL}
@@ -104,20 +113,20 @@ public class GalleryLayoutManager extends RecyclerView.LayoutManager implements 
 
     @Override
     public void onLayoutChildren(RecyclerView.Recycler recycler, RecyclerView.State state) {
-            Log.e(TAG, BuildConfig.DEBUG+"onLayoutChildren() called with: state = [" + state + "]");
         if (BuildConfig.DEBUG) {
+            Log.e(TAG, BuildConfig.DEBUG + "onLayoutChildren() called with: state = [" + state + "]");
         }
         if (getItemCount() == 0) {
             reset();
-            detachAndScrapAttachedViews(recycler);
+            removeAndRecycleAllViews(recycler);
             return;
         }
         if (state.isPreLayout()) {
             return;
         }
         if (state.getItemCount() != 0 && !state.didStructureChange()) {
-                Log.d(TAG, "onLayoutChildren: ignore extra layout step");
             if (BuildConfig.DEBUG) {
+                Log.d(TAG, "onLayoutChildren: ignore extra layout step");
             }
             return;
         }
@@ -390,7 +399,6 @@ public class GalleryLayoutManager extends RecyclerView.LayoutManager implements 
 
 
     private void fillCover(RecyclerView.Recycler recycler, RecyclerView.State state, int scrollDelta) {
-        long start = System.currentTimeMillis();
         if (getItemCount() == 0) {
             return;
         }
@@ -410,7 +418,6 @@ public class GalleryLayoutManager extends RecyclerView.LayoutManager implements 
             }
         }
         long end = System.currentTimeMillis();
-        Log.e(TAG, "fillCover: " +(end-start)+"====="+getChildCount());
     }
 
     private float calculateToCenterFraction(View child, float pendingOffset) {
@@ -579,7 +586,7 @@ public class GalleryLayoutManager extends RecyclerView.LayoutManager implements 
                     if (getDecoratedRight(child) - dx < leftEdge) {
                         removeAndRecycleView(child, recycler);
                         mFirstVisiblePosition++;
-                        Log.e(TAG, "fillWithHorizontal: "+child );
+                        Log.e(TAG, "fillWithHorizontal: " + child);
                         fixIndex--;
                         if (BuildConfig.DEBUG) {
                             Log.v(TAG, "fillWithHorizontal:removeAndRecycleView:" + getPosition(child) + " mFirstVisiblePosition change to:" + mFirstVisiblePosition);
@@ -623,9 +630,13 @@ public class GalleryLayoutManager extends RecyclerView.LayoutManager implements 
             for (int i = startPosition; i < getItemCount() && startOffset < rightEdge + dx; i++) {
                 long start = System.currentTimeMillis();
                 scrapRect = getState().mItemsFrames.get(i);
+                long eeeend = System.currentTimeMillis();
+                Log.e(TAG, "fillView=================: " + (eeeend - start) + getChildCount());
                 scrap = recycler.getViewForPosition(i);
+                long end = System.currentTimeMillis();
+                Log.e(TAG, "fillView: " + (end - start) + getChildCount());
                 addView(scrap);
-                Log.e(TAG, "fillWithHorizontal: "+scrap );
+                Log.e(TAG, "fillWithHorizontal: " + scrap);
                 if (scrapRect == null) {
                     scrapRect = new Rect();
                     getState().mItemsFrames.put(i, scrapRect);
@@ -644,8 +655,6 @@ public class GalleryLayoutManager extends RecyclerView.LayoutManager implements 
                 layoutDecorated(scrap, scrapRect.left, scrapRect.top, scrapRect.right, scrapRect.bottom);
                 startOffset = scrapRect.right;
                 mLastVisiblePos = i;
-                long end = System.currentTimeMillis();
-                Log.e(TAG, "fillView: " + (end - start) + getChildCount());
                 if (BuildConfig.DEBUG) {
                     Log.d(TAG, "fillWithHorizontal,layout:mLastVisiblePos: " + mLastVisiblePos);
                 }
@@ -828,6 +837,14 @@ public class GalleryLayoutManager extends RecyclerView.LayoutManager implements 
         }
     }
 
+    @Override
+    public void onDetachedFromWindow(RecyclerView view, RecyclerView.Recycler recycler) {
+        super.onDetachedFromWindow(view, recycler);
+        removeAndRecycleAllViews(recycler);
+        recycler.clear();
+        stopAutoRoll();
+    }
+
     /**
      * @author chensuilun
      */
@@ -918,6 +935,14 @@ public class GalleryLayoutManager extends RecyclerView.LayoutManager implements 
         recyclerView.setLayoutManager(this);
         mSnapHelper.attachToRecyclerView(recyclerView);
         recyclerView.addOnScrollListener(mInnerScrollListener);
+    }
+
+    private void startAutoRoll() {
+        mRecyclerView.postDelayed(mAutoRoll, mRollTime);
+    }
+
+    private void stopAutoRoll() {
+        mRecyclerView.removeCallbacks(mAutoRoll);
     }
 
     RecyclerView mRecyclerView;

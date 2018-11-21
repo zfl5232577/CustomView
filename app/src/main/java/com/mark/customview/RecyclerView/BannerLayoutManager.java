@@ -25,7 +25,7 @@ import com.mark.customview.MultiShapeProgressView.HesitateInterpolator;
  *     author : Mark
  *     e-mail : makun.cai@aorise.org
  *     time   : 2018/11/13
- *     desc   : Banner布局，卡片横向滑动布局(失败之作。)
+ *     desc   : Banner布局
  *     version: 1.0
  * </pre>
  */
