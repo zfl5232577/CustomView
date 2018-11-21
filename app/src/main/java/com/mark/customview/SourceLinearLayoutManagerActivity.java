@@ -59,10 +59,7 @@ public class SourceLinearLayoutManagerActivity extends AppCompatActivity {
         data.add("https://ss1.bdstatic.com/70cFuXSh_Q1YnxGkpoWK1HF6hhy/it/u=3163471846,3867214877&fm=26&gp=0.jpg");
         data.add("https://ss1.bdstatic.com/70cFuXSh_Q1YnxGkpoWK1HF6hhy/it/u=1188898371,3144820224&fm=26&gp=0.jpg");
         data.add("https://ss2.bdstatic.com/70cFvnSh_Q1YnxGkpoWK1HF6hhy/it/u=864899323,2101003777&fm=26&gp=0.jpg");
-        final LinearLayoutManager layoutManager = new LinearLayoutManager(this);
-        PagerSnapHelper pagerSnapHelper = new PagerSnapHelper();
-        pagerSnapHelper.attachToRecyclerView(recyclerView);
-        recyclerView.addItemDecoration(new RecyclerViewVerticalDivider(this,45, Color.WHITE));
+        final SourceLinearLayoutManager layoutManager = new SourceLinearLayoutManager(this);
         layoutManager.setOrientation(SourceLinearLayoutManager.HORIZONTAL);
         recyclerView.setLayoutManager(layoutManager);
         CardAdapter adapter = new CardAdapter(R.layout.item_layout_bannerlayoutmanager, data);
@@ -74,7 +71,6 @@ public class SourceLinearLayoutManagerActivity extends AppCompatActivity {
             }
         });
         recyclerView.setAdapter(adapter);
-        recyclerView.scrollToPosition(1);
     }
 
     public static class CardAdapter extends BaseQuickAdapter<String, BaseViewHolder> {

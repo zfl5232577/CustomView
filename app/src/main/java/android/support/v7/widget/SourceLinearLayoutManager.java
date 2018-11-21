@@ -53,9 +53,9 @@ import static android.support.v7.widget.RecyclerView.VERBOSE_TRACING;
 public class SourceLinearLayoutManager extends RecyclerView.LayoutManager implements
         ItemTouchHelper.ViewDropHandler, RecyclerView.SmoothScroller.ScrollVectorProvider {
 
-    private static final String TAG = "LinearLayoutManager";
+    private static final String TAG = SourceLinearLayoutManager.class.getSimpleName();
 
-    static final boolean DEBUG = false;
+    static final boolean DEBUG = true;
 
     public static final int HORIZONTAL = OrientationHelper.HORIZONTAL;
 
@@ -529,6 +529,7 @@ public class SourceLinearLayoutManager extends RecyclerView.LayoutManager implem
         }
         if (DEBUG) {
             Log.d(TAG, "Anchor info:" + mAnchorInfo);
+            Log.e(TAG, "onLayoutChildren: =========>"+getChildCount());
         }
 
         // LLM may decide to layout items for "extra" pixels to account for scrolling target,
@@ -628,7 +629,7 @@ public class SourceLinearLayoutManager extends RecyclerView.LayoutManager implem
             mLayoutState.mCurrentPosition += mLayoutState.mItemDirection;
             fill(recycler, mLayoutState, state, false);
             startOffset = mLayoutState.mOffset;
-
+            Log.e(TAG, "onLayoutChildren: mLayoutState.mAvailable:"+mLayoutState.mAvailable );
             if (mLayoutState.mAvailable > 0) {
                 extraForEnd = mLayoutState.mAvailable;
                 // start could not consume all it should. add more items towards end
@@ -638,40 +639,40 @@ public class SourceLinearLayoutManager extends RecyclerView.LayoutManager implem
                 endOffset = mLayoutState.mOffset;
             }
         }
-//
-//        // changes may cause gaps on the UI, try to fix them.
-//        // TODO we can probably avoid this if neither stackFromEnd/reverseLayout/RTL values have
-//        // changed
-//        if (getChildCount() > 0) {
-//            // because layout from end may be changed by scroll to position
-//            // we re-calculate it.
-//            // find which side we should check for gaps.
-//            if (mShouldReverseLayout ^ mStackFromEnd) {
-//                int fixOffset = fixLayoutEndGap(endOffset, recycler, state, true);
-//                startOffset += fixOffset;
-//                endOffset += fixOffset;
-//                fixOffset = fixLayoutStartGap(startOffset, recycler, state, false);
-//                startOffset += fixOffset;
-//                endOffset += fixOffset;
-//            } else {
-//                int fixOffset = fixLayoutStartGap(startOffset, recycler, state, true);
-//                startOffset += fixOffset;
-//                endOffset += fixOffset;
-//                fixOffset = fixLayoutEndGap(endOffset, recycler, state, false);
-//                startOffset += fixOffset;
-//                endOffset += fixOffset;
-//            }
-//        }
-//        layoutForPredictiveAnimations(recycler, state, startOffset, endOffset);
-//        if (!state.isPreLayout()) {
-//            mOrientationHelper.onLayoutComplete();
-//        } else {
-//            mAnchorInfo.reset();
-//        }
-//        mLastStackFromEnd = mStackFromEnd;
-//        if (DEBUG) {
-//            validateChildOrder();
-//        }
+
+        // changes may cause gaps on the UI, try to fix them.
+        // TODO we can probably avoid this if neither stackFromEnd/reverseLayout/RTL values have
+        // changed
+        if (getChildCount() > 0) {
+            // because layout from end may be changed by scroll to position
+            // we re-calculate it.
+            // find which side we should check for gaps.
+            if (mShouldReverseLayout ^ mStackFromEnd) {
+                int fixOffset = fixLayoutEndGap(endOffset, recycler, state, true);
+                startOffset += fixOffset;
+                endOffset += fixOffset;
+                fixOffset = fixLayoutStartGap(startOffset, recycler, state, false);
+                startOffset += fixOffset;
+                endOffset += fixOffset;
+            } else {
+                int fixOffset = fixLayoutStartGap(startOffset, recycler, state, true);
+                startOffset += fixOffset;
+                endOffset += fixOffset;
+                fixOffset = fixLayoutEndGap(endOffset, recycler, state, false);
+                startOffset += fixOffset;
+                endOffset += fixOffset;
+            }
+        }
+        layoutForPredictiveAnimations(recycler, state, startOffset, endOffset);
+        if (!state.isPreLayout()) {
+            mOrientationHelper.onLayoutComplete();
+        } else {
+            mAnchorInfo.reset();
+        }
+        mLastStackFromEnd = mStackFromEnd;
+        if (DEBUG) {
+            validateChildOrder();
+        }
     }
 
     @Override
@@ -1378,9 +1379,11 @@ public class SourceLinearLayoutManager extends RecyclerView.LayoutManager implem
         if (endIndex > startIndex) {
             for (int i = endIndex - 1; i >= startIndex; i--) {
                 removeAndRecycleViewAt(i, recycler);
+                Log.e(TAG, "removeAndRecycleViewAt: ");
             }
         } else {
             for (int i = startIndex; i > endIndex; i--) {
+                Log.e(TAG, "removeAndRecycleViewAt: ");
                 removeAndRecycleViewAt(i, recycler);
             }
         }
@@ -1509,7 +1512,6 @@ public class SourceLinearLayoutManager extends RecyclerView.LayoutManager implem
      */
     int fill(RecyclerView.Recycler recycler, LayoutState layoutState,
              RecyclerView.State state, boolean stopOnFocusable) {
-        Log.e(TAG, "fill: =======================>" );
         // max offset we should set is mFastScroll + available
         final int start = layoutState.mAvailable;
         if (layoutState.mScrollingOffset != LayoutState.SCROLLING_OFFSET_NaN) {
@@ -1521,6 +1523,7 @@ public class SourceLinearLayoutManager extends RecyclerView.LayoutManager implem
         }
         int remainingSpace = layoutState.mAvailable + layoutState.mExtra;
         LayoutChunkResult layoutChunkResult = mLayoutChunkResult;
+        Log.e(TAG, "fill: remainingSpace--------------"+remainingSpace );
         while ((layoutState.mInfinite || remainingSpace > 0) && layoutState.hasMore(state)) {
             layoutChunkResult.resetInternal();
             if (VERBOSE_TRACING) {
@@ -1635,6 +1638,7 @@ public class SourceLinearLayoutManager extends RecyclerView.LayoutManager implem
         if (params.isItemRemoved() || params.isItemChanged()) {
             result.mIgnoreConsumed = true;
         }
+        Log.e(TAG, "layoutChunk: "+view );
         result.mFocusable = view.hasFocusable();
     }
 
@@ -2243,6 +2247,7 @@ public class SourceLinearLayoutManager extends RecyclerView.LayoutManager implem
             }
             final View view = recycler.getViewForPosition(mCurrentPosition);
             mCurrentPosition += mItemDirection;
+            log();
             return view;
         }
 
