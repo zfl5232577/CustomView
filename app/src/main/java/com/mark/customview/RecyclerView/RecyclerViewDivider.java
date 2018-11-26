@@ -28,7 +28,6 @@ public class RecyclerViewDivider extends RecyclerView.ItemDecoration {
     private Context mContext;
     private Paint mPaint;
     private Drawable mDrawable;
-    private Drawable mDivider;
     private int mDividerHeight = 2;//分割线高度，默认为1px
     private int mOrientation;//列表的方向：LinearLayoutManager.VERTICAL或LinearLayoutManager.HORIZONTAL
     private static final int[] ATTRS = new int[]{android.R.attr.listDivider};
@@ -51,7 +50,7 @@ public class RecyclerViewDivider extends RecyclerView.ItemDecoration {
         this.mContext = context;
         mOrientation = orientation;
         final TypedArray a = context.obtainStyledAttributes(ATTRS);
-        mDivider = a.getDrawable(0);
+        mDrawable = a.getDrawable(0);
         a.recycle();
     }
 
@@ -65,8 +64,8 @@ public class RecyclerViewDivider extends RecyclerView.ItemDecoration {
     public RecyclerViewDivider(Context context, int orientation, int drawableId) {
         this(context, orientation);
         this.mContext = context;
-        mDivider = ContextCompat.getDrawable(context, drawableId);
-        mDividerHeight = mDivider.getIntrinsicHeight();
+        mDrawable = ContextCompat.getDrawable(context, drawableId);
+        mDividerHeight = mDrawable.getIntrinsicHeight();
     }
 
     /**

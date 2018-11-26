@@ -15,6 +15,10 @@
         <attr name="triangleColor" format="color"/>
     </declare-styleable>
 
+    <declare-styleable name="OverWatchProgressView">
+        <attr name="OverWatchProgressColor" format="color"/>
+    </declare-styleable>
+
     <declare-styleable name="LetterIndexBar">
         <attr name="normalLetterTextColor" format="color"/>
         <attr name="selectLetterTextColor" format="color"/>
