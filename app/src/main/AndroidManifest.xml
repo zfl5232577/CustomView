@@ -22,6 +22,7 @@
         </activity>
         <activity android:name=".QQStepViewActivity" />
         <activity android:name=".MultiShapeProgressActivity" />
+        <activity android:name=".OverWatchProgressViewActivity" />
         <activity android:name=".LetterIndexBarActivity" />
         <activity android:name=".FlowLayoutActivity" />
         <activity android:name=".TagFlowLayoutActivity" />

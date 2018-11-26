@@ -37,6 +37,7 @@ public class MultiShapeProgressView extends View {
     private int mSquareColor;
     private int mTriangleColor;
     private float animationValue;
+    private ValueAnimator mValueAnimator;
 
     public MultiShapeProgressView(Context context) {
         this(context, null);
@@ -111,16 +112,16 @@ public class MultiShapeProgressView extends View {
     }
 
     private void changeShape(){
-        ValueAnimator valueAnimator = ValueAnimator.ofFloat(-1,1);
-        valueAnimator.setInterpolator(new HesitateInterpolator());
-        valueAnimator.addUpdateListener(new ValueAnimator.AnimatorUpdateListener() {
+        mValueAnimator = ValueAnimator.ofFloat(-1,1);
+        mValueAnimator.setInterpolator(new HesitateInterpolator());
+        mValueAnimator.addUpdateListener(new ValueAnimator.AnimatorUpdateListener() {
             @Override
             public void onAnimationUpdate(ValueAnimator animation) {
                 animationValue = (float) animation.getAnimatedValue();
                 invalidate();
             }
         });
-        valueAnimator.addListener(new AnimatorListenerAdapter() {
+        mValueAnimator.addListener(new AnimatorListenerAdapter() {
             @Override
             public void onAnimationRepeat(Animator animation) {
                 super.onAnimationRepeat(animation);
@@ -138,14 +139,20 @@ public class MultiShapeProgressView extends View {
                 invalidate();
             }
         });
-        valueAnimator.setDuration(1000);
-        valueAnimator.setRepeatCount(ValueAnimator.INFINITE);
-        valueAnimator.setRepeatMode(ValueAnimator.REVERSE);
-        valueAnimator.start();
+        mValueAnimator.setDuration(1000);
+        mValueAnimator.setRepeatCount(ValueAnimator.INFINITE);
+        mValueAnimator.setRepeatMode(ValueAnimator.REVERSE);
+        mValueAnimator.start();
 
     }
 
     private enum Shape {
         Circular(), Square(), Triangle();
+    }
+
+    @Override
+    protected void onDetachedFromWindow() {
+        super.onDetachedFromWindow();
+        mValueAnimator.cancel();
     }
 }

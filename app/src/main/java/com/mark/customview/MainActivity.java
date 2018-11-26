@@ -40,6 +40,8 @@ public class MainActivity extends AppCompatActivity {
                     "仿写QQ计步器自定义控件", "QQStepViewActivity"),
             new DemoInfo("MultiShapeProgressView",
                     "仿写58同城加载进度图形", "MultiShapeProgressActivity"),
+            new DemoInfo("OverWatchProgressView",
+                    "仿写守望先锋加载进度图形", "OverWatchProgressViewActivity"),
             new DemoInfo("LetterIndexBar",
                     "字母索引条", "LetterIndexBarActivity"),
             new DemoInfo("FlowLayout",
