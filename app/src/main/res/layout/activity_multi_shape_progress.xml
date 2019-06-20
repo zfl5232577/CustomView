@@ -6,15 +6,12 @@
     android:layout_height="match_parent"
     tools:context="com.mark.customview.MultiShapeProgressActivity">
 
-    <com.mark.customview.MultiShapeProgressView.MultiShapeProgressView
-        android:layout_width="40dp"
+    <com.mark.customview.MultiShapeProgressView.ImageAnimationProgressView
+        android:layout_width="60dp"
         android:layout_height="80dp"
         app:layout_constraintTop_toTopOf="parent"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintEnd_toEndOf="parent"
-        app:layout_constraintBottom_toBottomOf="parent"
-        app:circularColor="#DD5044"
-        app:triangleColor="#FFCE44"
-        app:squareColor="#1FA463" />
+        app:layout_constraintBottom_toBottomOf="parent" />
 
 </android.support.constraint.ConstraintLayout>
